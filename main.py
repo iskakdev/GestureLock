@@ -81,11 +81,14 @@ def show_message(text):
     message_time = time.time()
 
 
-def draw_text_center(frame, text, y, scale, color, thickness):
-    (w, h), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, scale, thickness)
-    x = (frame.shape[1] - w) // 2
+def draw_text(frame, text, x, y, scale, color, thickness):
     cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, (0, 0, 0), thickness + 6)
     cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, thickness)
+
+
+def draw_text_center(frame, text, y, scale, color, thickness):
+    (w, h), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, scale, thickness)
+    draw_text(frame, text, (frame.shape[1] - w) // 2, y, scale, color, thickness)
 
 
 while True:
@@ -186,32 +189,29 @@ while True:
             draw_text_center(frame, str(left), frame.shape[0] // 2 + 60, 6, (0, 255, 255), 12)
 
     colors = {"LOCKED": (0, 0, 255), "UNLOCKED": (0, 255, 0), "COUNTDOWN": (0, 255, 255)}
-    cv2.rectangle(frame, (0, 0), (frame.shape[1], 50), (0, 0, 0), cv2.FILLED)
-    cv2.putText(frame, state, (15, 35), cv2.FONT_HERSHEY_SIMPLEX, 1, colors[state], 2)
-    cv2.putText(frame, f"Fingers: {total_fingers}", (frame.shape[1] - 180, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+    draw_text(frame, state, 20, 45, 1, colors[state], 2)
+    draw_text(frame, f"Fingers: {total_fingers}", 20, 85, 1, (255, 255, 255), 2)
 
     if gesture_name:
-        bar = int(min(hold / HOLD_TIME, 1) * (frame.shape[1] - 30))
-        cv2.rectangle(frame, (15, 55), (15 + bar, 65), colors[state], cv2.FILLED)
-
-    cv2.rectangle(frame, (0, frame.shape[0] - 45), (frame.shape[1], frame.shape[0]), (0, 0, 0), cv2.FILLED)
+        bar = int(min(hold / HOLD_TIME, 1) * 200)
+        cv2.rectangle(frame, (20, 100), (20 + bar, 108), colors[state], cv2.FILLED)
 
     if state == "UNLOCKED" and not video_writer:
         hint = "V - photo   Like - video   Palm - exit"
         if not gesture_ready:
             hint = "Remove hand"
-        cv2.putText(frame, hint, (15, frame.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        draw_text(frame, hint, 20, frame.shape[0] - 20, 0.7, (255, 255, 255), 2)
 
     if state == "LOCKED":
-        cv2.putText(frame, f"Show {password} fingers", (15, frame.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        draw_text(frame, f"Show {password} fingers", 20, frame.shape[0] - 20, 0.7, (255, 255, 255), 2)
 
     if video_writer:
         left = VIDEO_TIME - int(time.time() - video_start)
-        cv2.circle(frame, (frame.shape[1] - 40, 90), 12, (0, 0, 255), cv2.FILLED)
-        cv2.putText(frame, f"REC {left}", (frame.shape[1] - 150, 98), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        cv2.circle(frame, (frame.shape[1] - 40, 40), 12, (0, 0, 255), cv2.FILLED)
+        draw_text(frame, f"REC {left}", frame.shape[1] - 150, 50, 0.8, (0, 0, 255), 2)
 
     if message and time.time() - message_time < 2:
-        draw_text_center(frame, message, 110, 1, (255, 255, 255), 2)
+        draw_text_center(frame, message, 150, 1, (255, 255, 255), 2)
 
     cv2.imshow("Gesture Lock", frame)
 
